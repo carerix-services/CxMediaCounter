@@ -1,6 +1,5 @@
-CxClickCounter 
+CxMediaCounter 
 ==============
-Technical Design
 
 Introduction
 ------------
@@ -94,6 +93,7 @@ The URL's used in the emails have the following format:
 
 ### Queue handling
 The queue is handled by a separate script, and has the following script flow
+
 1. Retrieve an unhandled click from DB. Unhandled is currently defined as having
 	 `NULL` value of its `synchronise_started` attribute. This could later be 
 	 changed to allow for retrying failed clicks after a certain period of time.
@@ -174,13 +174,13 @@ exportcode of the typeID for the CRToDo. If that type does not exist, the note
 will not be created. If exportcode is `empty`, `COUNTCLICK` will be used.
 
 #### Example
-+ Only link an email, but give it the status with the default exportcode
-	
+Only link an email, but give it the status with the default exportcode
+
 	http://www.recruitersalesevent.nl/cxcntr/visit/services/TEST/0/9324/3171121711/?url=http://google.nl
 
-+ Link to everything, with the status `JOBS2CANDS`, and a generated subject
+Link to everything, with the status `JOBS2CANDS`, and a generated subject
 
-	http://www.recruitersalesevent.nl/cxcntr/visit/services/TEST/JOBS2CANDS/9324/442/5508/5864/%20608625648.452543454.3171121711.167069773/?url=http://google.nl&amp;subject=My%20test%20subject%3C
+	http://www.recruitersalesevent.nl/cxcntr/visit/services/TEST/JOBS2CANDS/9324/442/5508/5864/608625648.452543454.3171121711.167069773/?url=http://google.nl&amp;subject=My%20test%20subject%3C
 
 #### CxScript
 	<cx:let name="url" value="http://www.carerix.net/UNIQUE_JOB_URL" keep=""/>
@@ -365,65 +365,67 @@ application. This note is linked to a candidate, and/or a vacancy
 and/or a contact person.  Here is an overview:
 
 <table cellpadding="0" cellspacing="0" style="width: 100%" class="table table-condensed table-striped table-hover">
+	<thead>
+		<tr>
+			<th></th>
+			<th>export code (suggested)</th>
+			<th>Candidate</th>
+			<th>Vacancy / Job Order</th>
+			<th>Contact Person</th>
+		</tr>
+	</thead>
 	<tbody>
 		<tr>
-			<td></td>
-			<td>export code (suggested)</td>
-			<td>Candidate</td>
-			<td>Vacancy / Job Order</td>
-			<td>Contact Person</td>
-		</tr>
-		<tr>
-			<td>A</td>
+			<th>A</th>
 			<td>(not used)</td>
 			<td>0</td>
 			<td>0</td>
 			<td>0</td>
 		</tr>
 		<tr>
-			<td>B</td>
+			<th>B</th>
 			<td>mailopened</td>
 			<td>0</td>
 			<td>0</td>
 			<td>1</td>
 		</tr>
 		<tr>
-			<td>C</td>
+			<th>C</th>
 			<td>visit</td>
 			<td>0</td>
 			<td>1</td>
 			<td>0</td>
 		</tr>
 		<tr>
-			<td>D</td>
+			<th>D</th>
 			<td>vacs2contacts</td>
 			<td>0</td>
 			<td>1</td>
 			<td>1</td>
 		</tr>
 		<tr>
-			<td>E</td>
+			<th>E</th>
 			<td>mailopened</td>
 			<td>1</td>
 			<td>0</td>
 			<td>0</td>
 		</tr>
 		<tr>
-			<td>F</td>
+			<th>F</th>
 			<td>cands2contacts</td>
 			<td>1</td>
 			<td>0</td>
 			<td>1</td>
 		</tr>
 		<tr>
-			<td>G</td>
+			<th>G</th>
 			<td>(not possible)<sup>*</sup></td>
 			<td>1</td>
 			<td>1</td>
 			<td>0</td>
 		</tr>
 		<tr>
-			<td>H</td>
+			<th>H</th>
 			<td>vacs2contacts</td>
 			<td>1</td>
 			<td>1</td>
