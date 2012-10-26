@@ -4,3 +4,4 @@ cookiefile
 **/cookiefile
 *.un~
 db/.db
+*.ini

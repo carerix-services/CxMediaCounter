@@ -15,7 +15,6 @@ function configure() {
  	// Do not autoload ALL controllers, since our own autoloader will only 
  	// autoload the required ones
  	option('controllers_dir', false);
- 	
 } // configure();
 
 /**
@@ -25,8 +24,21 @@ function configure() {
  * @return string
  */
 function passLookup($appName) {
-	switch ( strtolower($appName) ) {
-		case 'services' :			return 'D8Ara4hE';
-		default : 						throw new Exception('Password for ' . $appName . ' is not available');  
-	} // switch
+	$appName = strtolower($appName);
+	$file = ROOTDIR . '/.passwords.ini';
+	
+	if ( !is_file($file) ) {
+		throw new Exception("XML Password file 'password.ini' is missing");
+	}
+
+	$passwords = parse_ini_file($file, true) ;
+	if ( empty($passwords['app_xml']) ) {
+		throw new Exception("password.ini file is missing 'app_xml' category");
+	}
+	
+	if ( empty($passwords['app_xml'][$appName]) ) {
+		throw new Exception("password.ini file does not contain '{$appName}' in 'app_xml' category");
+	}
+	
+	return $passwords['app_xml'][$appName];
 } // passLookup();
