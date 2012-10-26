@@ -93,7 +93,7 @@ class CxVisitMailopened extends CxVisit {
 	 */
 	protected function _getChecksum($codec = 'strtolower') {
 		$response = $this->_getRecipient();
-		$q = $this->_recipientType === 'employee' ? '/*/toUser/CRUser/stableHash' : '/*/stableHash';
+		$q = '/*/stableHash';
 		return call_user_func_array($codec, array($response->query($q)->item(0)->nodeValue));
 	} // _getChecksum();
 	
