@@ -61,6 +61,11 @@ class CxVisit {
 				$this->_currVisit->$uripart = $value;
 			}
 		} // foreach
+		$this->_currVisit->env = 
+					"IP:    {$_SERVER['REMOTE_ADDR']}" . PHP_EOL
+				. "Query: {$_SERVER['QUERY_STRING']}" . PHP_EOL
+				. "Date:  " . strftime('%Y-%m-%dT%H:%M:%S%z')
+		;
 		
 		// usefull exception for testing
 // 		throw new Exception('Disable line ' . __LINE__ . ' of file ' . __FILE__ . ' to store the visit');
@@ -100,9 +105,9 @@ class CxVisit {
 		if ( !$fp = fsockopen($_SERVER['HTTP_HOST'], 80, $errno, $errstr, 30) ) {
 			throw new Exception("Socket error: {$errstr}");
 		}
-
+		$dir = array_pop(explode('/', realpath(ROOTDIR)));
 		$content = array(
-				"POST /cxcntr/visit/handlequeue HTTP:/1.1",
+				"POST /{$dir}/visit/handlequeue HTTP:/1.1",
 				"Host: {$_SERVER['HTTP_HOST']}",
 				"Content-Type: application/x-www-form-urlencoded",
 				"Content-Length: " . strlen($paramString),
