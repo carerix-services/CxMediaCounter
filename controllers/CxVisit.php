@@ -106,6 +106,7 @@ class CxVisit {
 			throw new Exception("Socket error: {$errstr}");
 		}
 		$dir = array_pop(explode('/', realpath(ROOTDIR)));
+		
 		$content = array(
 				"POST /{$dir}/visit/handlequeue HTTP:/1.1",
 				"Host: {$_SERVER['HTTP_HOST']}",
@@ -151,11 +152,13 @@ class CxVisit {
 		// try sending the visit to Carerix, and store succesfull if succesfull, or
 		// the failure message if it is not
 		try {
-			option('CXAppPassword', passLookup($currVisit->app));
 			$this->_sendVisitToCX();
 			$this->_currVisit->synchronise_finished = SQLiteObject::getNow();
 		} catch ( Exception $e ) {
 			$this->_currVisit->synchronise_error = $e->getMessage();
+			header('Content-type: text/plain');
+			echo $e->getMessage() . PHP_EOL . PHP_EOL;
+			echo $e->getTraceAsString();
 		}
 		$this->_currVisit->store();
 	} // _handleNextVisitOnQueue();
@@ -210,7 +213,7 @@ class CxVisit {
 		if ( !empty($this->_currVisit->email) ) {
 			$xpath->query('/CRToDo/toPreviousToDo/CRToDo')->item(0)->setAttribute('id', $this->_currVisit->email);
 		}
-		$response = $this->_getCxResponseXPath('POST', 'save', $xml->saveXML(), false);
+		$response = $this->_getCxResponseXPath('POST', '/CRToDo', $xml->saveXML());
 		$todoID = $response->query("/CRToDo")->item(0)->getAttribute('id');
 		return $todoID;
 	} // _createToDoForVisit();
@@ -249,7 +252,7 @@ class CxVisit {
 			$toType = $type;
 		}
 		$xml->loadXML("<CRToDo id='{$todoID}'><to{$toType}><CR{$type} id='{$id}'/></to{$toType}></CRToDo>");
-		$response = $this->_getCxResponseXPath('POST', 'save', $xml->saveXML(), false);
+		$response = $this->_getCxResponseXPath('PUT', "/CRToDo/{$todoID}", $xml->saveXML());
 	} // _linkToDoTo();
 	
 	/**
@@ -262,13 +265,8 @@ class CxVisit {
 			if ( empty($this->_currVisit->employee) ) {
 				throw new Exception('No employee to obtain!');
 			}
-			$params = array(
-					"template" => "object.xml",
-					"entity" => "CREmployee",
-					"id" => $this->_currVisit->employee,
-					"show" => array("owner.toUser.id", "informalName", "stableHash.hexadecimalDescription"),
-			);
-			$this->_responseCache[__METHOD__] = $this->_getCxResponseXPath('GET', 'view', $params);
+			$uri = "/CREmployee/{$this->_currVisit->employee}/show/owner.toUser.id/show/informalName/show/stableHash.hexadecimalDescription";
+			$this->_responseCache[__METHOD__] = $this->_getCxResponseXPath('GET', $uri);
 		}
 		
 		if ( $query === null ) {
@@ -291,13 +289,8 @@ class CxVisit {
 			if ( empty($this->_currVisit->publication) ) {
 				throw new Exception('No publication to obtain!');
 			}
-			$params = array(
-					"template" => "object.xml",
-					"entity" => "CRPublication",
-					"id" => $this->_currVisit->publication,
-					"show" => array("owner.toUser.id", "stableHash.hexadecimalDescription", "toMedium.name", "toVacancy.vacancyID", "toVacancy.jobTitle"),
-			);
-			$this->_responseCache[__METHOD__] = $this->_getCxResponseXPath('GET', 'view', $params);
+			$uri = "/CRPublication/{$this->_currVisit->publication}/show/owner.toUser.id/show/stableHash.hexadecimalDescription/show/toMedium.name/show/toVacancy.vacancyID/show/toVacancy.jobTitle";
+			$this->_responseCache[__METHOD__] = $this->_getCxResponseXPath('GET', $uri);
 		}
 		
 		if ( $query === null ) {
@@ -320,13 +313,8 @@ class CxVisit {
 			if ( empty($this->_currVisit->vacancy) ) {
 				throw new Exception('No vacancy to obtain!');
 			}
-			$params = array(
-					"template" => "object.xml",
-					"entity" => "CRVacancy",
-					"id" => $this->_currVisit->vacancy,
-					"show" => array("owner.toUser.id", "toCompany.id", "jobTitle", "stableHash.hexadecimalDescription"),
-			);
-			$this->_responseCache[__METHOD__] = $this->_getCxResponseXPath('GET', 'view', $params);
+			$uri = "/CRVacancy/{$this->_currVisit->vacancy}/show/owner.toUser.id/show/toCompany.id/show/jobTitle/show/stableHash.hexadecimalDescription";
+			$this->_responseCache[__METHOD__] = $this->_getCxResponseXPath('GET', $uri);
 		}
 		
 		if ( $query === null ) {
@@ -349,13 +337,8 @@ class CxVisit {
 			if ( empty($this->_currVisit->contact) ) {
 				throw new Exception('No vacancy to obtain!');
 			}
-			$params = array(
-					"template" => "object.xml",
-					"entity" => "CRUser",
-					"id" => $this->_currVisit->contact,
-					"show" => array("owner.toUser.id", "toCompany.id", "informalName", "stableHash.hexadecimalDescription"),
-			);
-			$this->_responseCache[__METHOD__] = $this->_getCxResponseXPath('GET', 'view', $params);
+			$uri = "/CRUser/{$this->_currVisit->contact}/show/owner.toUser.id/show/toCompany.id/show/informalName/show/stableHash.hexadecimalDescription";
+			$this->_responseCache[__METHOD__] = $this->_getCxResponseXPath('GET', $uri);
 		}
 		
 		if ( $query === null ) {
@@ -378,13 +361,8 @@ class CxVisit {
 			if ( empty($this->_currVisit->email) ) {
 				throw new Exception('No vacancy to obtain!');
 			}
-			$params = array(
-					"template" => "object.xml",
-					"entity" => "CRToDo",
-					"id" => $this->_currVisit->email,
-					"show" => array("owner.toUser.id", "stableHash.hexadecimalDescription"),
-			);
-			$this->_responseCache[__METHOD__] = $this->_getCxResponseXPath('GET', 'view', $params);
+			$uri = "/CRToDo/{$this->_currVisit->email}/show/owner.toUser.id/show/stableHash.hexadecimalDescription";
+			$this->_responseCache[__METHOD__] = $this->_getCxResponseXPath('GET', $uri);
 		}
 		
 		if ( $query === null ) {
@@ -404,13 +382,8 @@ class CxVisit {
 	 */
 	protected function _getDataNode($query = null) {
 		if ( empty($this->_responseCache[__METHOD__]) ) {
-			$params = array(
-					"template" => "objects.xml",
-					"entity" => "CRDataNode",
-					"count" => 1,
-					"qualifier" => "exportCode='" . $this->_getRequiredExportCode() . "'",
-			);
-			$this->_responseCache[__METHOD__] = $this->_getCxResponseXPath('GET', 'view', $params);
+			$uri = "/CRDataNode/list/count/1/qualifier/exportCode='" . $this->_getRequiredExportCode() . "'";
+			$this->_responseCache[__METHOD__] = $this->_getCxResponseXPath('GET', $uri);
 		}
 		
 		if ( $query === null ) {
@@ -473,43 +446,31 @@ class CxVisit {
 	} // _getDataNodeID();
 	
 	/**
-	 * Returns a DOMXPath object for the response to the desired request. 
+	 * Determines whether to use _getCxResponseXPathByXmlAPI or 
+	 * _getCxRestXPathByRestAPI for the current call, transforming uri's as 
+	 * required
 	 * 
-	 * @param		string 		$http_word			[GET, POST, PUT, DELETE]
-	 * @param		unknown		$view						The view to request
-	 * @param		array			$params					HTTP parameters to pass to the request
-	 * @param		boolean		[$doBuildQuery]	If false, the http_build_query method will not be called upon the $params.
+	 * @param		multiple possible, as per subsidiary methods
 	 * @return	DOMXPath
+	 * @see _getCxResponseXPathByXmlAPI
+	 * @see _getCxRestXPathByRestAPI
 	 */
-	protected function _getCxResponseXPath($http_word, $view, $params, $doBuildQuery = true) {
-		$context = array(
-			'http' => array(
-					'method' => $http_word,
-					'header' => 'x-cx-pwd: ' . option('CXAppPassword'),
-			)
-		);
-		
-		$query = $params;
-		if ( $doBuildQuery ) {
-			$query = preg_replace('/%5B[0-9]+%5D=/', '=', http_build_query($query));
+	protected function _getCxResponseXPath($http_word, $uri, $params=array()) {
+		// try using the REST api, falling back on the XML api if failing. Throw the
+		// REST api exception if the fallback fails too.
+		try {
+			$xml = call_user_func_array(array($this, '_getCxRestResponse'), func_get_args());
+		} catch ( Exception $e ) {
+			try {
+				$xml = call_user_func_array(array($this, '_getCxXmlResponse'), func_get_args());
+			} catch ( Exception $e2 ) {
+				throw $e2;
+			}
 		}
-		
-		if ( $http_word === 'POST' ) {
-			$context['http']['header'] .= "\r\nContent-type: application/x-www-form-urlencoded\r\n";
-			$context['http']['content'] = $query;
-		}
-		
-		// retrieve the requested XML
-		$xml = file_get_contents(
-				"http://{$this->_currVisit->app}web.carerix.net/cgi-bin/WebObjects/{$this->_currVisit->app}web.woa/wa/" . $view
-						. ($http_word == 'GET' ? ('?' . $query) : ''),
-				false, 
-				stream_context_create($context)
-		);
-		
+
 		// if this is not an XML: throw exception
 		if ( strpos($xml, '<?xml') !== 0 ) {
-			throw new Exception("Failed to obtain XML for {$http_word} {$view}: {$xml}");
+			throw new Exception("Failed to obtain XML, got '{$xml}' for {$http_word} {$uri}");
 		}
 		
 		// create and return the DOMXPath
@@ -519,5 +480,112 @@ class CxVisit {
 		$doc->loadXML($xml, LIBXML_NOENT);
 		return new DOMXPath($doc);
 	} // _getCxResponseXPath();
+	
+	/**
+	 * Returns a DOMXPath object for the response to the desired request. 
+	 * 
+	 * @param		string 		$http_word			[GET, POST, PUT, DELETE]
+	 * @param		unknown		$uri 						The view to request
+	 * @param		array			$params					HTTP parameters to pass to the request
+	 * @return	DOMXPath
+	 */
+	protected function _getCxRestResponse($http_word, $uri, $params = array()) {
+		$context = array(
+				'http' => array(
+						'method' => $http_word,
+						'header' => 'Authorization: Basic ' . base64_encode($this->_currVisit->app . ':' . tokenLookup($this->_currVisit->app)),
+				)
+		);
+		
+		if ( $http_word !== 'GET' ) {
+			$context['http']['header'] .= "\r\nContent-type: text/xml\r\n";
+			$context['http']['content'] = $params;
+			echo $params;
+		}
+		
+		// retrieve the requested XML
+		// TODO: Check whether https is available and whether it works...
+		return file_get_contents('http://api.carerix.com' . $uri, false, stream_context_create($context));
+	} // _getCxRestResponse();
+	
+	/**
+	 * Returns a DOMXPath object for the response to the desired request.
+	 *
+	 * @param		string 		$http_word			[GET, POST, PUT, DELETE]
+	 * @param		unknown		$view						The view to request
+	 * @param		array			$params					HTTP parameters to pass to the request
+	 * @param		boolean		[$doBuildQuery]	If false, the http_build_query method will not be called upon the $params.
+	 * @return	DOMXPath
+	 */
+	protected function _getCxXmlResponse($http_word, $uri, $params = array()) {
+		// PUT words are implemented as POST in XML API
+		if ( $http_word === 'PUT' ) {
+			$http_word = 'POST';
+		}
+	
+		$context = array(
+				'http' => array(
+						'method' => $http_word,
+						'header' => 'x-cx-pwd: ' . passLookup($this->_currVisit->app)
+				)
+		);
+	
+		if ( $http_word === 'GET' ) {
+			$params = $this->_parseRestUriToXmlParams($uri);
+			$query = preg_replace('/%5B[0-9]+%5D=/', '=', http_build_query($params));
+			$view = 'view';
+		} else {
+			$context['http']['header'] .= "\r\nContent-type: application/x-www-form-urlencoded\r\n";
+			$context['http']['content'] = $params;
+			$view = 'save';
+		}
+
+		// retrieve the requested XML
+		return file_get_contents(
+				"http://{$this->_currVisit->app}web.carerix.net/cgi-bin/WebObjects/{$this->_currVisit->app}web.woa/wa/" . $view
+				. ($http_word == 'GET' ? ('?' . $query) : ''),
+				false,
+				stream_context_create($context)
+		);
+	} // _getCxXmlResponse();
+	
+	/**
+	 * Parses a CxRest GET request into a GET string for the XML api
+	 * 
+	 * @param string $http_word
+	 * @param unknown $uri
+	 * @param unknown $params
+	 */
+	protected function _parseRestUriToXmlParams($uri) {
+		$uriparts = array_values(array_filter(explode('/', $uri)));
+
+		if ( is_numeric($uriparts[1]) ) {
+			$params = array(
+						"template" => "object.xml"
+					, "entity" => array_shift($uriparts)
+					, "id" => array_shift($uriparts)
+			);
+		} else if ( $uriparts[1] === 'list' ) {
+			$params = array(
+						"template" => "objects.xml"
+					, "entity" => array_shift($uriparts)
+			);
+			array_shift($uriparts); // remove list from uri
+		}
+		
+		while ( count($uriparts) ) {
+			$key = array_shift($uriparts);
+			$value = array_shift($uriparts);
+			if ( !isset($params[$key]) ) {
+				$params[$key] = $value;
+			} else if ( !is_array($params[$key]) ) {
+				$params[$key] = array($params[$key], $value);
+			} else {
+				$params[$key][] = $value;
+			}
+		} // while
+		
+		return $params;
+	} // _parseRestUriToXmlParams();
 	
 } // end class CxVisit

@@ -24,21 +24,44 @@ function configure() {
  * @return string
  */
 function passLookup($appName) {
+	return secretLookup($appName, 'app_xml');
+} // passLookup();
+
+/**
+ * tokenLookup returns the token for the app passed as argument
+ * 
+ * @param string $appName
+ * @throws Exception
+ * @return string
+ */
+function tokenLookup($appName) {
+	return secretLookup($appName, 'app_token');
+} // tokenLookup();
+
+/**
+ * secretLookup returns the secret for $appname useable for $domain
+ *
+ * @param string $appName
+ * @param string $domain
+ * @throws Exception
+ * @return string
+ */
+function secretLookup($appName, $domain) {
 	$appName = strtolower($appName);
 	$file = ROOTDIR . '/.passwords.ini';
 	
 	if ( !is_file($file) ) {
-		throw new Exception("XML Password file 'password.ini' is missing");
+		throw new Exception("Password file '.password.ini' is missing");
 	}
 
 	$passwords = parse_ini_file($file, true) ;
-	if ( empty($passwords['app_xml']) ) {
-		throw new Exception("password.ini file is missing 'app_xml' category");
+	if ( empty($passwords[$domain]) ) {
+		throw new Exception(".password.ini file is missing '{$domain}' category");
 	}
 	
-	if ( empty($passwords['app_xml'][$appName]) ) {
-		throw new Exception("password.ini file does not contain '{$appName}' in 'app_xml' category");
+	if ( empty($passwords[$domain][$appName]) ) {
+		throw new Exception(".password.ini file does not contain '{$appName}' in '{$domain}' category");
 	}
 	
-	return $passwords['app_xml'][$appName];
-} // passLookup();
+	return empty($passwords[$domain][$appName]) ? false : $passwords[$domain][$appName];
+} // secretLookup();

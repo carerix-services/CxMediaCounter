@@ -119,7 +119,7 @@ class DbVisit extends SQLiteObject {
 	 */
 	public static function getUnhandledVisit() {
 		if ( empty(self::$_preparedStatements[__FUNCTION__]) ) {
-			$sql = "SELECT * FROM " . get_class() . " WHERE synchronise_started IS NULL LIMIT 1"; 
+			$sql = "SELECT * FROM " . get_class() . " WHERE synchronise_started IS NULL LIMIT 1";
 			self::$_preparedStatements[__FUNCTION__] = self::getPDO()->prepare($sql);
 		}
 		if ( !self::$_preparedStatements[__FUNCTION__]->execute() ) {
