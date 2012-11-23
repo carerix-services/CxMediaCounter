@@ -458,13 +458,14 @@ class CxVisit {
 	protected function _getCxResponseXPath($http_word, $uri, $params=array()) {
 		// try using the REST api, falling back on the XML api if failing. Throw the
 		// REST api exception if the fallback fails too.
+		$args = func_get_args();
 		try {
-			$xml = call_user_func_array(array($this, '_getCxRestResponse'), func_get_args());
+			$xml = call_user_func_array(array($this, '_getCxRestResponse'), $args);
 		} catch ( Exception $e ) {
 			try {
-				$xml = call_user_func_array(array($this, '_getCxXmlResponse'), func_get_args());
+				$xml = call_user_func_array(array($this, '_getCxXmlResponse'), $args);
 			} catch ( Exception $e2 ) {
-				throw $e2;
+				throw $e;
 			}
 		}
 
@@ -493,6 +494,7 @@ class CxVisit {
 		$context = array(
 				'http' => array(
 						'method' => $http_word,
+						'ignore_errors' => true,
 						'header' => 'Authorization: Basic ' . base64_encode($this->_currVisit->app . ':' . tokenLookup($this->_currVisit->app)),
 				)
 		);
@@ -500,12 +502,18 @@ class CxVisit {
 		if ( $http_word !== 'GET' ) {
 			$context['http']['header'] .= "\r\nContent-type: text/xml\r\n";
 			$context['http']['content'] = $params;
-			echo $params;
 		}
 		
 		// retrieve the requested XML
 		// TODO: Check whether https is available and whether it works...
-		return file_get_contents('http://api.carerix.com' . $uri, false, stream_context_create($context));
+		$ret = file_get_contents('http://api.carerix.com' . $uri, false, stream_context_create($context));
+		
+		list(,$http_code) = explode(' ', $http_response_header[0]);
+		if ( $http_code < 200 || $http_code >= 300 ) {
+			throw new Exception("{$http_code} Failure for {$http_word} {$uri}: {$ret}");
+		}
+		
+		return $ret;
 	} // _getCxRestResponse();
 	
 	/**

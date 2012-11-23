@@ -66,7 +66,6 @@ abstract class SQLiteObject {
 		}
 		return self::$_now;
 	} // getNow();
-		
 	
 	/**
 	 * Creates the available fields and fills their values. Available only once.
