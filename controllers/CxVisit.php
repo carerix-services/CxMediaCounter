@@ -157,8 +157,6 @@ class CxVisit {
 		} catch ( Exception $e ) {
 			$this->_currVisit->synchronise_error = $e->getMessage();
 			header('Content-type: text/plain');
-			echo $e->getMessage() . PHP_EOL . PHP_EOL;
-			echo $e->getTraceAsString();
 		}
 		$this->_currVisit->store();
 	} // _handleNextVisitOnQueue();
@@ -495,7 +493,7 @@ class CxVisit {
 				'http' => array(
 						'method' => $http_word,
 						'ignore_errors' => true,
-						'header' => 'Authorization: Basic ' . base64_encode($this->_currVisit->app . ':' . tokenLookup($this->_currVisit->app)),
+						'header' => 'Authorization: Basic ' . base64_encode(strtolower($this->_currVisit->app) . ':' . tokenLookup($this->_currVisit->app)),
 				)
 		);
 		

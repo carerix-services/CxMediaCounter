@@ -55,6 +55,7 @@ function secretLookup($appName, $domain) {
 	}
 
 	$passwords = parse_ini_file($file, true) ;
+	
 	if ( empty($passwords[$domain]) ) {
 		throw new Exception(".password.ini file is missing '{$domain}' category");
 	}
