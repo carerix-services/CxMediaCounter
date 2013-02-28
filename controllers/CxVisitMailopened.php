@@ -39,6 +39,42 @@ class CxVisitMailopened extends CxVisit {
 		echo base64_decode("R0lGODlhAQABAIAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==");
 		exit;
 	} // _doRedirect();
+
+	/**
+	 * (non-PHPdoc)
+	 * @see CxVisit::_getRecentSimilarVisit()
+	 */
+	protected function _getRecentSimilarVisit() {
+		$pdo = SQLiteObject::getPDO();
+		$cls = get_class($this->_currVisit);
+
+		$sql = "SELECT * FROM {$cls} WHERE" 
+						. " creation >= :mindate"
+						. " AND creation < :maxdate"
+						. " AND fullUri = :fulluri" 
+						. " LIMIT 1"
+		;
+		$stmt = $pdo->prepare($sql);
+		
+		$maxDate = new DateTime($this->_currVisit->creation);
+		$maxDate->setTimezone(new DateTimeZone('GMT'));
+		$stmt->bindValue(':maxdate', $maxDate->format(SQLiteObject::DateFormat));
+		
+		$minDate = clone $maxDate;
+		$minDate->modify('-1 day');
+		$stmt->bindValue(':mindate', $minDate->format(SQLiteObject::DateFormat));
+		
+		$stmt->bindValue(':fulluri', $this->_currVisit->fullUri);
+		
+		if ( !$stmt->execute() ) {
+			$err = $pdo->errorInfo();
+			throw new Exception("PDO Error while obtaining recent " . get_class() . ": " . $err[2]);
+		}
+		
+		$ret = $stmt->fetchObject($cls);
+		$stmt->closeCursor();
+		return $ret ? $ret : null;		
+	} // _getRecentSimilarVisit();
 	
 	/**
 	 * Send a visit to Carerix through the REST api

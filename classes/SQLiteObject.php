@@ -5,6 +5,13 @@
  */
 abstract class SQLiteObject {
 	/**
+	 * Default date format with which to store dates in the DB
+	 * 
+	 * @var string
+	 */
+	const DateFormat = DateTime::ISO8601;
+	
+	/**
 	 * The static PDO object created by DBConnect
 	 * 
 	 * @var PDO
@@ -62,7 +69,8 @@ abstract class SQLiteObject {
 	public static function getNow($refresh = true) {
 		if ( $refresh || empty(self::$_now) ) {
 			$now = new DateTime();
-			self::$_now = $now->format(DateTime::ISO8601);
+			$now->setTimezone(new DateTimeZone('GMT'));
+			self::$_now = $now->format(SQLiteObject::DateFormat);
 		}
 		return self::$_now;
 	} // getNow();

@@ -61,10 +61,11 @@ class CxVisit {
 				$this->_currVisit->$uripart = $value;
 			}
 		} // foreach
+		$date = new DateTime();
 		$this->_currVisit->env = 
 					"IP:    {$_SERVER['REMOTE_ADDR']}" . PHP_EOL
 				. "Query: {$_SERVER['QUERY_STRING']}" . PHP_EOL
-				. "Date:  " . strftime('%Y-%m-%dT%H:%M:%S%z')
+				. "Date:  " . $date->format(SQLiteObject::DateFormat)
 		;
 		
 		// usefull exception for testing
@@ -74,7 +75,7 @@ class CxVisit {
 		$this->_currVisit->store();
 
 		// usefull exception for testing
-// 		throw new Exception('Disable line ' . __LINE__ . ' of file ' . __FILE__ . ' to touch the queue');
+//  		throw new Exception('Disable line ' . __LINE__ . ' of file ' . __FILE__ . ' to touch the queue');
 		
 		// call the queue handler asynchronous
 		$this->_touchQueue();
@@ -152,6 +153,9 @@ class CxVisit {
 		// try sending the visit to Carerix, and store succesfull if succesfull, or
 		// the failure message if it is not
 		try {
+			if ( $visit = $this->_getRecentSimilarVisit() ) {
+				throw new Exception('Skipped due to recent similar visit: ' . $visit->id);
+			}
 			$this->_sendVisitToCX();
 			$this->_currVisit->synchronise_finished = SQLiteObject::getNow();
 		} catch ( Exception $e ) {
@@ -160,6 +164,17 @@ class CxVisit {
 		}
 		$this->_currVisit->store();
 	} // _handleNextVisitOnQueue();
+	
+	/**
+	 * Get a recent similar visit from the db. Returns null if none is found. Also
+	 * returns null if the method for obtaining similar visits has not been 
+	 * overridden; default behavioir is to flag no visits as "recent and similar"
+	 *  
+	 * @return CxVisit
+	 */
+	protected function _getRecentSimilarVisit() {
+		return null;
+	} // _getRecentSimilarVisit();
 	
 	/**
 	 * Send a visit to Carerix through the REST api
