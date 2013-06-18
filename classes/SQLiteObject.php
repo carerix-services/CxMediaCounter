@@ -33,6 +33,13 @@ abstract class SQLiteObject {
 	protected static $_now = null;
 	
 	/**
+	 * Location of the lock on the disk. Will be set by setLockLoc()
+	 * 
+	 * @var string	path/to/loc
+	 */
+	private static $_lockLoc = '';
+	
+	/**
 	 * Creates the SQL lite DB as based upon the SQLLiteObject's field array
 	 */
 	protected function _createDB() {
@@ -107,9 +114,53 @@ abstract class SQLiteObject {
 			$this->_createDB();
 		}
 		
+		self::setLockLoc();
+		
 		// set the defaults for this object
 		$this->_setDefaults();
 	} // __construct();
+	
+	/**
+	 * Ensures the lock location is set.
+	 */
+	public static function setLockLoc() {
+		if ( empty(self::$_lockLoc) ) {
+			self::$_lockLoc = ROOTDIR . 'db/.dblock';
+		}
+	} // setLockLoc();
+	
+	/**
+	 * Write the lock file. While the loc file exists, nothing is done, but once
+	 * the file no longer exists, it is created and a shutdown function is added.
+	 */
+	public static function lock() {
+		self::setLockLoc();
+		
+		$it = 1;
+		while ( is_file(self::$_lockLoc) ) {
+			sleep(1);
+			if ( ++$it > 1000 ) {
+				// if you're already waiting 1000 iterations, perhaps something went 
+				// wrong with unlocking in a previous iteration. Therefore: unlock it 
+				// and continue anyways. Even computers have a limit to patience...
+				self::unlock();
+				break;
+			}
+		}
+		touch(self::$_lockLoc);
+		new ShutDownClass;
+	} // lock();
+	
+	/**
+	 * Remove the lock file. Semantically, this means a new lock can be obtained,
+	 * and thus the proces is "unlocked"
+	 */
+	public static function unlock() {
+		self::setLockLoc();
+		if ( is_file(self::$_lockLoc) ) {
+			unlink(self::$_lockLoc);
+		}
+	} // unlock();
 	
 	/**
 	 * Returns the PDO isntance
@@ -166,3 +217,36 @@ abstract class SQLiteObject {
 	} // store();
 	
 } // SQLLiteObject();
+
+/**
+ * Since register_shutdown_function doesn't appear to work on the Carerix server,
+ * this should "fake" it. 
+ * @author Reserve 1
+ *
+ */
+class ShutDownClass {
+	/**
+	 * All instances of the shutdown class need to be stored in order to ensure
+	 * PHP's garbage collector only collects them once the entire script has been
+	 * executed.
+	 * 
+	 * @var ShutDownClass[]
+	 */
+	private static $_instances = array();
+	
+	/**
+	 * Constructor: write the instance.
+	 */
+	public function __construct() {
+		self::$_instances[] = $this;
+	} // __construct();
+	
+	/**
+	 * Destructor: called once the script execution ends (due to each instance 
+	 * being stored in the $_instances array).
+	 */
+	public function __destruct() {
+		SQLiteObject::unlock();
+	} // __destruct();
+	
+} // end class ShutDownClass();

@@ -11,7 +11,7 @@
   	<pre><code><?php echo h(print_r($debug_args, true))?></code></pre>
   <?php endif; ?>
   
-  <h2 id="limonade-options">Options</strong></h2>
+  <h2 id="limonade-options">Options</h2>
   <pre><code><?php echo h(print_r(option(), true))?></code></pre>
   <p class="bt top"><a href="#header">[ &#x2191; ]</a></p>
   

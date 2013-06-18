@@ -149,6 +149,7 @@ class CxVisit {
 		// set the synchronise started flag to prevent double handling
 		$this->_currVisit->synchronise_started = SQLiteObject::getNow();
 		$this->_currVisit->store();
+		DbVisit::unlock();
 		
 		// try sending the visit to Carerix, and store succesfull if succesfull, or
 		// the failure message if it is not

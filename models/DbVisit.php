@@ -118,6 +118,7 @@ class DbVisit extends SQLiteObject {
 	 * Returns a visit that has not been handled yet (synchronise_started is null)
 	 */
 	public static function getUnhandledVisit() {
+ 		self::lock();
 		if ( empty(self::$_preparedStatements[__FUNCTION__]) ) {
 			$sql = "SELECT * FROM " . get_class() . " WHERE synchronise_started IS NULL LIMIT 1";
 			self::$_preparedStatements[__FUNCTION__] = self::getPDO()->prepare($sql);
